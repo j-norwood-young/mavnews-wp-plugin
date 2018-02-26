@@ -15,15 +15,17 @@ Author Email: jason@10layer.com
 require_once("vendor/autoload.php");
 use GuzzleHttp\Client;
 
+$api_base_url = 'http://mavnews.dailymaverick.co.za:5001/api/';
+
 add_action( 'admin_menu', 'mavnews_add_admin_menu' );
 add_action( 'admin_init', 'mavnews_settings_init' );
 
 
-function mavnews_add_admin_menu(  ) { 
+function mavnews_add_admin_menu(  ) {
 	add_menu_page(
 		'Mavnews',
 		'Mavnews',
-		'manage_options',
+		'edit_posts',
 		'mavnews.php',
 		"mavnews_html",
 		'dashicons-editor-kitchensink',
@@ -120,30 +122,23 @@ function mavnews_options_page(  ) {
 }
 
 function mavnews_html() {
-	?>
-	<h1>Mavnews</h1>
-	<?php
 	$options = get_option( 'mavnews_settings' );
 	$client = new Client([
 		// Base URI is used with relative requests
-		'base_uri' => 'http://mavnews.dailymaverick.co.za:5001/api/',
+		'base_uri' => 'http://localhost:5001/api/',
 		// You can set any number of default request options.
-		'timeout'  => 2.0,
+		'timeout'  => 20.0,
 		'auth' => [$options["mavnews_api_username"], $options["mavnews_api_password"]]
 	]);
-	$response = $client->request('GET', 'article?limit=100&sort[date]=-1&fields=headline,date,keywords');
+	$search = "";
+	if ($_POST["s"]) {
+		$search = "&search=" . $_POST["s"];
+	}
+	$response = $client->request('GET', 'article?limit=100&sort[date]=-1&fields=headline,date,keywords,provider' . $search);
 	$body = $response->getBody();
 	$contents = $body->getContents();
 	$articles = json_decode($contents)->data;
-	forEach($articles as $article) {
-	?>
-		<p><a href="post-new.php?mavnews-id=<?= $article->_id ?>"><?= $article->headline ?></a>
-		<br><?= $article->date ?>
-		</p>
-	<?php
-	}
-	?>
-	<?php
+	require_once("mavnews-articles.php");
 }
 
 add_filter( 'default_content', 'my_editor_content' );
