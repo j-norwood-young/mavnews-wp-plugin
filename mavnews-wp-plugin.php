@@ -134,7 +134,7 @@ function mavnews_html() {
 		'auth' => [$options["mavnews_api_username"], $options["mavnews_api_password"]]
 	]);
 	$search = "";
-	if ($_POST["s"]) {
+	if (isset($_POST["s"])) {
 		$search = "&search=" . $_POST["s"];
 		$searchStr = $_POST["s"];
 	}

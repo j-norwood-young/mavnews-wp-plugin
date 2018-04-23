@@ -2,7 +2,7 @@
 <p class="search-box">
 <form method="POST">
 	<label class="screen-reader-text" for="post-search-input">Search Wires:</label>
-	<input type="search" id="post-search-input" name="s" value="">
+	<input type="search" id="post-search-input" name="s" value="" required>
 	<input type="submit" id="search-submit" class="button" value="Search Wires">
 </form>
 </p>
