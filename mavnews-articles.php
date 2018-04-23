@@ -3,8 +3,16 @@
 <form method="POST">
 	<label class="screen-reader-text" for="post-search-input">Search Wires:</label>
 	<input type="search" id="post-search-input" name="s" value="">
-	<input type="submit" id="search-submit" class="button" value="Search Wires"></p>
+	<input type="submit" id="search-submit" class="button" value="Search Wires">
 </form>
+</p>
+<?php
+	if ($search) {
+?>
+<p>Found <strong><?= number_format($count) ?></strong> results for <em><?= $searchStr ?></em> <a href="admin.php?page=mavnews.php">Clear</p>
+<?php
+	}
+?>
 <table class="wp-list-table widefat fixed striped posts">
 	<thead>
 	<tr>
@@ -21,7 +29,7 @@
 ?>
 		<tr id="post-20" class="iedit level-0 post-20 type-post status-draft format-standard hentry category-uncategorized">
 			<td class="title column-title has-row-actions column-primary page-title" data-colname="Title">
-				<a href="post-new.php?mavnews-id=<?= $article->_id ?>"><?= $article->headline ?></a>
+				<a href="post-new.php?mavnews-id=<?= $article->_id ?>&post_type=article"><?= $article->headline ?></a>
 			</td>
 			<td class="author column-author" data-colname="Provider"><?= $article->provider ?></td>
 			<td class="tags column-tags" data-colname="Keywords"><?= implode(", ", $article->keywords) ?></td>
@@ -40,12 +48,3 @@
 	</tfoot>
 
 </table>
-<?php
-forEach($articles as $article) {
-?>
-	<p><a href="post-new.php?mavnews-id=<?= $article->_id ?>"><?= $article->headline ?></a>
-	<br><?= $article->provider ?> | <?= $article->date ?>
-	</p>
-<?php
-}
-?>

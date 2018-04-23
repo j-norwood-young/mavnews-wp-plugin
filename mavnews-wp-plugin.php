@@ -15,6 +15,9 @@ Author Email: jason@10layer.com
 require_once("vendor/autoload.php");
 use GuzzleHttp\Client;
 
+$AFP_ID=504;
+$NEWS24_ID=685;
+
 $api_base_url = 'http://mavnews.dailymaverick.co.za:5001/api/';
 
 add_action( 'admin_menu', 'mavnews_add_admin_menu' );
@@ -125,7 +128,7 @@ function mavnews_html() {
 	$options = get_option( 'mavnews_settings' );
 	$client = new Client([
 		// Base URI is used with relative requests
-		'base_uri' => 'http://localhost:5001/api/',
+		'base_uri' => 'http://mavnews.dailymaverick.co.za:5001/api/',
 		// You can set any number of default request options.
 		'timeout'  => 20.0,
 		'auth' => [$options["mavnews_api_username"], $options["mavnews_api_password"]]
@@ -133,16 +136,24 @@ function mavnews_html() {
 	$search = "";
 	if ($_POST["s"]) {
 		$search = "&search=" . $_POST["s"];
+		$searchStr = $_POST["s"];
 	}
-	$response = $client->request('GET', 'article?limit=100&sort[date]=-1&fields=headline,date,keywords,provider' . $search);
-	$body = $response->getBody();
-	$contents = $body->getContents();
-	$articles = json_decode($contents)->data;
-	require_once("mavnews-articles.php");
+	try {
+		$response = $client->request('GET', 'article?limit=100&sort[date]=-1&fields=headline,date,keywords,provider' . $search);
+		$body = $response->getBody();
+		$contents = $body->getContents();
+		$articles = json_decode($contents)->data;
+		$count = json_decode($contents)->count;
+		require_once("mavnews-articles.php");
+	} catch(Exeption $error) {
+		print "<h4>An error occured</h4>";
+		print_r($exception);
+	}
 }
 
 add_filter( 'default_content', 'my_editor_content' );
 add_filter( 'default_title', 'my_editor_headline' );
+add_filter( 'default_author', 'my_editor_author' );
 
 function my_editor_content( $content ) {
 	$options = get_option( 'mavnews_settings' );
@@ -189,5 +200,16 @@ function my_editor_headline( $headline ) {
 		$article = json_decode($contents);
 		// print_r($article);
 		return $article->headline;
+	}
+}
+
+function my_editor_author() {
+	if (isset($_GET["mavnews-id"])) {
+		$response = $client->request('GET', 'article/' . $_GET["mavnews-id"]);
+		$body = $response->getBody();
+		$contents = $body->getContents();
+		$article = json_decode($contents);
+		// print_r($article);
+		return $AFP_ID;
 	}
 }
