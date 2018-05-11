@@ -21,7 +21,6 @@ $NEWS24_ID=685;
 $api_base_url = 'http://mavnews.dailymaverick.co.za:5001/api/';
 
 add_action( 'admin_menu', 'mavnews_add_admin_menu' );
-// add_action( 'admin_init', 'mavnews_settings_init' );
 
 
 function mavnews_add_admin_menu(  ) {
@@ -34,40 +33,7 @@ function mavnews_add_admin_menu(  ) {
 		'dashicons-editor-kitchensink',
 		20
 	);
-	// add_submenu_page( 'mavnews.php', 'Mavnews Settings', 'Mavnews Settings', 'manage_options', 'mavnews', 'mavnews_options_page' );
-
 }
-
-
-// function mavnews_settings_init(  ) { 
-
-// 	register_setting( 'pluginPage', 'mavnews_settings' , 'sanitize');
-
-// 	add_settings_section(
-// 		'mavnews_pluginPage_section', 
-// 		__( 'API Authentication', 'wordpress' ), 
-// 		'mavnews_settings_section_callback', 
-// 		'pluginPage'
-// 	);
-
-// 	add_settings_field( 
-// 		'mavnews_api_username', 
-// 		__( 'Mavnews API username', 'wordpress' ), 
-// 		'mavnews_api_username_render', 
-// 		'pluginPage', 
-// 		'mavnews_pluginPage_section' 
-// 	);
-
-// 	add_settings_field( 
-// 		'mavnews_api_password', 
-// 		__( 'Mavnews API password', 'wordpress' ), 
-// 		'mavnews_api_password_render', 
-// 		'pluginPage', 
-// 		'mavnews_pluginPage_section' 
-// 	);
-
-
-// }
 
 function sanitize($input) {
 	if (isset($input["password"])) {
@@ -156,6 +122,25 @@ function my_editor_headline( $headline ) {
 		$article = json_decode($contents);
 		// print_r($article);
 		return $article->headline;
+	}
+}
+
+function my_editor_excerpt( $excerpt ) {
+	include("config.php");
+	$client = new Client([
+		// Base URI is used with relative requests
+		'base_uri' => 'http://mavnews.dailymaverick.co.za:5001/api/',
+		// You can set any number of default request options.
+		'timeout'  => 2.0,
+		'auth' => [$mavnews_options["mavnews_api_username"], $mavnews_options["mavnews_api_password"]]
+	]);
+	if (isset($_GET["mavnews-id"])) {
+		$response = $client->request('GET', 'article/' . $_GET["mavnews-id"]);
+		$body = $response->getBody();
+		$contents = $body->getContents();
+		$article = json_decode($contents);
+		// print_r($article);
+		return $article->blurb;
 	}
 }
 
