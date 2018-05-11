@@ -1,7 +1,7 @@
 <?php
 /**
  * @package Mavnews_WP_Plugin
- * @version 0.1
+ * @version 0.2
  */
 /*
 Plugin Name: Mavnews
@@ -21,7 +21,7 @@ $NEWS24_ID=685;
 $api_base_url = 'http://mavnews.dailymaverick.co.za:5001/api/';
 
 add_action( 'admin_menu', 'mavnews_add_admin_menu' );
-add_action( 'admin_init', 'mavnews_settings_init' );
+// add_action( 'admin_init', 'mavnews_settings_init' );
 
 
 function mavnews_add_admin_menu(  ) {
@@ -34,40 +34,40 @@ function mavnews_add_admin_menu(  ) {
 		'dashicons-editor-kitchensink',
 		20
 	);
-	add_submenu_page( 'mavnews.php', 'Mavnews Settings', 'Mavnews Settings', 'manage_options', 'mavnews', 'mavnews_options_page' );
+	// add_submenu_page( 'mavnews.php', 'Mavnews Settings', 'Mavnews Settings', 'manage_options', 'mavnews', 'mavnews_options_page' );
 
 }
 
 
-function mavnews_settings_init(  ) { 
+// function mavnews_settings_init(  ) { 
 
-	register_setting( 'pluginPage', 'mavnews_settings' , 'sanitize');
+// 	register_setting( 'pluginPage', 'mavnews_settings' , 'sanitize');
 
-	add_settings_section(
-		'mavnews_pluginPage_section', 
-		__( 'API Authentication', 'wordpress' ), 
-		'mavnews_settings_section_callback', 
-		'pluginPage'
-	);
+// 	add_settings_section(
+// 		'mavnews_pluginPage_section', 
+// 		__( 'API Authentication', 'wordpress' ), 
+// 		'mavnews_settings_section_callback', 
+// 		'pluginPage'
+// 	);
 
-	add_settings_field( 
-		'mavnews_api_username', 
-		__( 'Mavnews API username', 'wordpress' ), 
-		'mavnews_api_username_render', 
-		'pluginPage', 
-		'mavnews_pluginPage_section' 
-	);
+// 	add_settings_field( 
+// 		'mavnews_api_username', 
+// 		__( 'Mavnews API username', 'wordpress' ), 
+// 		'mavnews_api_username_render', 
+// 		'pluginPage', 
+// 		'mavnews_pluginPage_section' 
+// 	);
 
-	add_settings_field( 
-		'mavnews_api_password', 
-		__( 'Mavnews API password', 'wordpress' ), 
-		'mavnews_api_password_render', 
-		'pluginPage', 
-		'mavnews_pluginPage_section' 
-	);
+// 	add_settings_field( 
+// 		'mavnews_api_password', 
+// 		__( 'Mavnews API password', 'wordpress' ), 
+// 		'mavnews_api_password_render', 
+// 		'pluginPage', 
+// 		'mavnews_pluginPage_section' 
+// 	);
 
 
-}
+// }
 
 function sanitize($input) {
 	if (isset($input["password"])) {
@@ -78,60 +78,14 @@ function sanitize($input) {
 	return $input;
 }
 
-
-function mavnews_api_username_render(  ) { 
-
-	$options = get_option( 'mavnews_settings' );
-	?>
-	<input type='text' name='mavnews_settings[mavnews_api_username]' value='<?php echo $options['mavnews_api_username']; ?>'>
-	<?php
-
-}
-
-
-function mavnews_api_password_render(  ) { 
-
-	$options = get_option( 'mavnews_settings' );
-	?>
-	<input type='password' name='mavnews_settings[mavnews_api_password]' value='    '>
-	<?php
-
-}
-
-
-function mavnews_settings_section_callback(  ) { 
-
-	echo __( 'Use your Mavnews credentials to authenticate with the API', 'wordpress' );
-
-}
-
-
-function mavnews_options_page(  ) { 
-
-	?>
-	<form action='options.php' method='post'>
-
-		<h2>Mavnews</h2>
-
-		<?php
-		settings_fields( 'pluginPage' );
-		do_settings_sections( 'pluginPage' );
-		submit_button();
-		?>
-
-	</form>
-	<?php
-
-}
-
 function mavnews_html() {
-	$options = get_option( 'mavnews_settings' );
+	include_once("config.php");
 	$client = new Client([
 		// Base URI is used with relative requests
 		'base_uri' => 'http://mavnews.dailymaverick.co.za:5001/api/',
 		// You can set any number of default request options.
 		'timeout'  => 20.0,
-		'auth' => [$options["mavnews_api_username"], $options["mavnews_api_password"]]
+		'auth' => [$mavnews_options["mavnews_api_username"], $mavnews_options["mavnews_api_password"]]
 	]);
 	$search = "";
 	if (isset($_POST["s"])) {
@@ -156,13 +110,13 @@ add_filter( 'default_title', 'my_editor_headline' );
 add_filter( 'default_author', 'my_editor_author' );
 
 function my_editor_content( $content ) {
-	$options = get_option( 'mavnews_settings' );
+	include("config.php");
 	$client = new Client([
 		// Base URI is used with relative requests
 		'base_uri' => 'http://mavnews.dailymaverick.co.za:5001/api/',
 		// You can set any number of default request options.
 		'timeout'  => 2.0,
-		'auth' => [$options["mavnews_api_username"], $options["mavnews_api_password"]]
+		'auth' => [$mavnews_options["mavnews_api_username"], $mavnews_options["mavnews_api_password"]]
 	]);
 	if (isset($_GET["mavnews-id"])) {
 		$response = $client->request('GET', 'article/' . $_GET["mavnews-id"]);
@@ -171,7 +125,9 @@ function my_editor_content( $content ) {
 		$article = json_decode($contents);
 		$body = $article->body;
 		$lines = explode("\n", $body);
-		$dateline = array_shift($lines);
+		if ($article->provider !== "News24") {
+			$dateline = array_shift($lines);
+		}
 		$copyright = array_pop($lines);
 		$body = trim(implode("\n", $lines));
 		$lines = explode("\n", $body);
@@ -185,13 +141,13 @@ function my_editor_content( $content ) {
 }
 
 function my_editor_headline( $headline ) {
-	$options = get_option( 'mavnews_settings' );
+	include("config.php");
 	$client = new Client([
 		// Base URI is used with relative requests
 		'base_uri' => 'http://mavnews.dailymaverick.co.za:5001/api/',
 		// You can set any number of default request options.
 		'timeout'  => 2.0,
-		'auth' => [$options["mavnews_api_username"], $options["mavnews_api_password"]]
+		'auth' => [$mavnews_options["mavnews_api_username"], $mavnews_options["mavnews_api_password"]]
 	]);
 	if (isset($_GET["mavnews-id"])) {
 		$response = $client->request('GET', 'article/' . $_GET["mavnews-id"]);
@@ -204,6 +160,7 @@ function my_editor_headline( $headline ) {
 }
 
 function my_editor_author() {
+	include_once("config.php");
 	if (isset($_GET["mavnews-id"])) {
 		$response = $client->request('GET', 'article/' . $_GET["mavnews-id"]);
 		$body = $response->getBody();

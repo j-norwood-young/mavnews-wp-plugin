@@ -29,7 +29,7 @@
 ?>
 		<tr id="post-20" class="iedit level-0 post-20 type-post status-draft format-standard hentry category-uncategorized">
 			<td class="title column-title has-row-actions column-primary page-title" data-colname="Title">
-				<a href="post-new.php?mavnews-id=<?= $article->_id ?>&post_type=article"><?= $article->headline ?></a>
+				<a href="post-new.php?mavnews-id=<?= $article->_id ?><?= ($mavnews_options["mavnews_dev"]) ? "" : "&post_type=article" ?>"><?= $article->headline ?></a>
 			</td>
 			<td class="author column-author" data-colname="Provider"><?= $article->provider ?></td>
 			<td class="tags column-tags" data-colname="Keywords"><?= implode(", ", $article->keywords) ?></td>
